@@ -406,6 +406,7 @@ def change_carriers_names(base_url, access_token, carrier_ids=None, name=None):
         if not name:
             name = get_random_string(randint(1, 11))
         url = f"{base_url}/carriers/v1.0/{c}?name={name}({c})"
+        name = None
 
         payload = {}
         headers = {
@@ -432,7 +433,7 @@ def validate_carrier_payment(base_url, access_token, carrier_ids=None):
             'Authorization': f'Bearer {access_token}'
         }
 
-        responses.append(requests.request("PUT", url, headers=headers, data=payload).json())
+        responses.append(requests.request("GET", url, headers=headers, data=payload).json())
 
     return responses
 
@@ -643,7 +644,7 @@ def get_votes(base_url, access_token, votes=()):
 
     responses = []
     for v in votes:
-        url = f"{base_url}/feeds/votes/v1.0/{v}"
+        url = f"{base_url}/feeds/votes/v1.0/{v}/questions"
 
         payload = {}
         headers = {
@@ -655,15 +656,15 @@ def get_votes(base_url, access_token, votes=()):
     return responses
 
 
-def get_notifications(base_url, access_token, votes=()):
+def get_notifications(base_url, access_token, notifications=()):
 
     """
-    Возвращает детальную информацию по всем опросам
+    Возвращает детальную информацию по всем оповещениям
     """
 
     responses = []
-    for v in votes:
-        url = f"{base_url}/feeds/votes/v1.0/{v}"
+    for v in notifications:
+        url = f"{base_url}/feeds/notifications/v1.0/{v}?read=false"
 
         payload = {}
         headers = {
@@ -677,7 +678,8 @@ def get_notifications(base_url, access_token, votes=()):
 
 # Карты и терминалы
 
-def get_places_on_map(base_url, access_token, lat=55.75830929718952, lon=37.61971450262452, rad=0.6210346151841654, qfilter=("BUY_TICKET", "DOWN_LOYALTY")):
+def get_places_on_map(base_url, access_token, lat=55.75830929718952, lon=37.61971450262452,
+                      rad=0.6210346151841654, qfilter=("BUY_TICKET", "DOWN_LOYALTY")):
 
     """
     Находит места на карте и возвращает информацию о них
