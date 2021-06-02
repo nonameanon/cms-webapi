@@ -1,29 +1,10 @@
-from cycle import *
-from req import request_access_token
-from dotenv import load_dotenv
-from os import getenv
+from user import User
 
+u = User()
 
-load_dotenv()
-USERNAME = getenv('NAME')
-PASSWORD = getenv('PASSWORD')
-NEW_PASSWORD = getenv('NEW_PASSWORD')
-BASE_URL = "https://uat-mm.srvdev.ru/passenger/api"
-
-PAYLOAD = f"grant_type=password&username={USERNAME}&password={PASSWORD}"
-
-ACCESS_TOKEN = request_access_token(PAYLOAD)["access_token"]
-REFRESH_TOKEN = request_access_token(PAYLOAD)["refresh_token"]
-
-
-test_main_cycle(BASE_URL, ACCESS_TOKEN)
-change_data_cycle(BASE_URL, ACCESS_TOKEN)
-change_carriers_cycle(BASE_URL, ACCESS_TOKEN)
-if change_password_cycle(BASE_URL, ACCESS_TOKEN, PASSWORD, NEW_PASSWORD):
-    PASSWORD, NEW_PASSWORD = NEW_PASSWORD, PASSWORD
-    with open('.env', 'w') as f:
-        f.write(f"NAME={USERNAME}\n")
-        f.write(f"PASSWORD={PASSWORD}\n")
-        f.write(f"NEW_PASSWORD={NEW_PASSWORD}\n")
-live_feed_cycle(BASE_URL, ACCESS_TOKEN)
-maps_cycle(BASE_URL, ACCESS_TOKEN)
+# print(upload_profile_image(BASE_URL, ACCESS_TOKEN))
+# main_cycle(u.base_url, u.access_token)
+# change_data_cycle(u.base_url, u.access_token)
+# change_carriers_cycle(u.base_url, u.access_token)
+# u.change_password(change_password_cycle(u.base_url, u.access_token, u.get_pass(), u.get_new_pass()))
+# maps_cycle(u.base_url, u.access_token)

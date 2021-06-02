@@ -2,6 +2,7 @@ import requests
 import json
 from string import ascii_letters
 from random import choice, randint
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 
 def request_access_token(payload):
@@ -19,12 +20,12 @@ def request_access_token(payload):
     }
 
     response = requests.request("POST", url, headers=headers, data=payload)
-    return response.json()
+    return response
 
 
 # Основная информация
 
-def accounts_info(base_url, access_token):
+def get_accounts_info(base_url, access_token):
 
     """
     Возвращает основную информацию об аккаунте
@@ -170,7 +171,7 @@ def get_trips_list(base_url, access_token, page=None, size=20, linked_cards=(), 
     Возвращает список поездок
     """
 
-    url = f"{base_url}/operations/v1.0?size={size}"
+    url = f"{base_url}/trips/v1.0?size={size}"
     if page:
         url += f"&pageToken={page}"
     if linked_cards:
@@ -229,6 +230,28 @@ def download_file(base_url, access_token, fileid=None):
     response = requests.request("GET", url, headers=headers, data=payload)
 
     return response
+
+
+def upload_profile_image(base_url, access_token, file=None):
+    url = f"{base_url}/accounts/v1.0/user/photo"
+
+    if file is None:
+        file = open('test.png', 'rb')
+
+    mp_e = MultipartEncoder(fields={
+        'file': ('test.png', file, 'image/png'),
+    })
+
+    payload = {'file': file}
+
+    headers = {
+        'Content-Type': mp_e.content_type,
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload, files=file)
+
+    return response.json()
 
 
 def delete_profile_image(base_url, access_token, image_field_id=None):

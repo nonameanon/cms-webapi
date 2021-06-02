@@ -1,109 +1,145 @@
 from req import *
+from user import User
+from reporter import Reporter
+import pytest
 
-image_id = None
-carriers = ()
-bank_cards = ()
-offers = ()
-votes = ()
-notifications = ()
+u = User()
+rep = Reporter()
+rep.title = 'MM LKP CYCLES'
 
 
-def test_main_cycle(base_url, access_token):
-    global image_id, carriers, bank_cards, offers, votes, notifications
-    response = accounts_info(base_url, access_token)
+def main_cycle(base_url, access_token):
+    response = get_accounts_info(base_url, access_token)
     if response["success"]:
+        rep.add_test(True, title='Main account info',
+                     description=f"{response['data']}")
         print("PASS: Main account info")
         try:
             if response["data"]["imageId"]:
-                image_id = response["data"]["imageId"]
+                u.image_id = response["data"]["imageId"]
         except KeyError:
             pass
-
-    if image_id:
-        response = get_profile_image(base_url, access_token, image_id)
-        if response.status_code == 200:
-            print(f"PASS: Image found\n\tID: {image_id}")
-        else:
-            print(f"FAILED: Image not found\n\tID: {image_id}")
     else:
+        rep.add_test(False, title='Main account info')
+
+    if u.image_id:
+        response = get_profile_image(base_url, access_token, u.image_id)
+        if response.status_code == 200:
+            rep.add_test(True, title='Image found', description=f'ID: {u.image_id}')
+            print(f"PASS: Image found\n\tID: {u.image_id}")
+        else:
+            rep.add_test(False, title='Image not found', description=f'ID: {u.image_id}\n{response.json()}')
+            print(f"FAILED: Image not found\n\tID: {u.image_id}")
+    else:
+        rep.add_test('B', title='Image not set')
         print("BLOCKED: Image not set")
 
     response = get_carriers_list(base_url, access_token)
     if response['success']:
-        carriers = [c['card']['linkedCardId'] for c in response['data']['cards']]
-        print(f'PASS: Carriers \n\tIDs: {carriers}')
+        u.carriers = [c['card']['linkedCardId'] for c in response['data']['cards']]
+        rep.add_test(True, 'Carriers list', u.carriers)
+        print(f'PASS: carriers \n\tIDs: {u.carriers}')
+    else:
+        rep.add_test(False, 'Carriers list', response)
 
     response = get_bank_cards_list(base_url, access_token)
     if response['success']:
-        bank_cards = [c['linkedBankCardId'] for c in response['data']]
-        print(f'PASS: Bank cards \n\tIDs: {bank_cards}')
+        u.bank_cards = [c['linkedBankCardId'] for c in response['data']]
+        rep.add_test(True, 'Bank Cards', u.bank_cards)
+        print(f'PASS: Bank cards \n\tIDs: {u.bank_cards}')
+    else:
+        rep.add_test(False, 'Bank Cards', response)
 
     response = get_feeds_list(base_url, access_token)
     if response['success']:
-        notifications = [n['id'] for n in response['data']['notifications']['notifications']]
-        print(f"PASS: Notifications\n\tIDs: {notifications}")
-        offers = [o['id'] for o in response['data']['offers']]
-        print(f"PASS: Offers\n\tIDs: {offers}")
-        votes = [v['id'] for v in response['data']['votes']]
-        print(f"PASS: Votes\n\tIDs: {votes}")
+        u.notifications = [n['id'] for n in response['data']['notifications']['notifications']]
+        rep.add_test(True, 'Notifications', u.notifications)
+        print(f"PASS: notifications\n\tIDs: {u.notifications}")
+
+        u.offers = [o['id'] for o in response['data']['offers']]
+        rep.add_test(True, 'Offers', u.offers)
+        print(f"PASS: offers\n\tIDs: {u.offers}")
+
+        u.votes = [v['id'] for v in response['data']['votes']]
+        rep.add_test(True, 'Votes', u.votes)
+        print(f"PASS: votes\n\tIDs: {u.votes}")
+    else:
+        rep.add_test(False, 'Live Feed', response)
 
     response = get_tickets_list(base_url, access_token)
     if response['success']:
+        rep.add_test(True, 'Tickets List', [r['title'] for r in response['data']['items']])
         print(f"PASS: Tickets\n\tQty: {len(response['data']['items'])}")
+    else:
+        rep.add_test(False, 'Tickets List', response)
 
     response = get_operations_list(base_url, access_token)
     if response['success']:
+        rep.add_test(True, 'Operations List', [r['displayName'] for r in response['data']['items']])
         print(f"PASS: Operations\n\tQty: {len(response['data']['items'])}")
+    else:
+        rep.add_test(False, 'Operations List', response)
 
     response = get_trips_list(base_url, access_token)
     if response['success']:
+        rep.add_test(True, 'Trips', [r['displayName'] for r in response['data']['items']])
         print(f"PASS: Trips\n\tQty: {len(response['data']['items'])}")
+    else:
+        rep.add_test(False, 'Trips', response)
+        print(f"FAILED: Trips\n\t{response}")
 
     response = get_stations_list(base_url, access_token)
     if response['success']:
+        rep.add_test(True, 'Stations List', len(response['data']))
         print(f"PASS: Stations\n\tQty: {len(response['data'])}")
+    else:
+        rep.add_test(False, 'Stations List', response)
 
     print(f"PASSED: MAIN INFO")
     print("-"*50)
 
 
+main_cycle(u.base_url, u.access_token)
+rep.end()
+
+
 def change_data_cycle(base_url, access_token):
-    if image_id:
-        response = delete_profile_image(base_url, access_token, image_id)
+    if u.image_id:
+        response = delete_profile_image(base_url, access_token, u.image_id)
         if response['success']:
-            print(f"PASS: Delete image\n\tID: {image_id}")
+            print(f"PASS: Delete image\n\tID: {u.image_id}")
 
     response = update_user_info(base_url, access_token, firstName="AAAAA", middleName="BBBBBBB",
                                 lastName="CCCCCCCC", gender="female")
     if response['success']:
         print("PASS: Update user info")
 
-    response = turn_off_notifications(base_url, access_token)
+    response = turn_off_u.notifications(base_url, access_token)
     if response['success']:
-        print("PASS: Turn off notifications")
+        print("PASS: Turn off u.notifications")
 
-    response = turn_on_notifications(base_url, access_token)
+    response = turn_on_u.notifications(base_url, access_token)
     if response['success']:
-        print("PASS: Turn on notifications")
+        print("PASS: Turn on u.notifications")
 
     print("PASS: CHANGE PERSONAL DATA")
     print('-'*50)
 
 
 def change_carriers_cycle(base_url, access_token):
-    if carriers:
-        response = change_carriers_names(base_url, access_token, carriers)
+    if u.carriers:
+        response = change_u.carriers_names(base_url, access_token, u.carriers)
         if response[0]['success']:
             print("PASS: Changed names")
 
-        response = get_carriers_info(base_url, access_token, carriers)
+        response = get_carriers_info(base_url, access_token, u.carriers)
         if response[0]['success']:
-            print("PASS: Carriers info")
+            print("PASS: u.carriers info")
             for r in response:
                 print(f"\tNumber: {r['data']['card']['card']['cardNumber']} | "
                       f"{r['data']['card']['card']['displayName']}")
 
-        response = validate_carrier_payment(base_url, access_token, carriers)
+        response = validate_carrier_payment(base_url, access_token, u.carriers)
         for r in response:
             if r['success']:
                 print("PASS: Carrier has no unwritten tickets\n\t"
@@ -125,19 +161,19 @@ def change_carriers_cycle(base_url, access_token):
         if response['success']:
             print(f"PASS: Carrier unbind\n\tID: {card_id}")
 
-        response = turn_on_balance_notifications(base_url, access_token, carriers[0])
+        response = turn_on_balance_u.notifications(base_url, access_token, u.carriers[0])
         if response['success']:
-            print("PASS: Enable balance notifications")
+            print("PASS: Enable balance u.notifications")
 
-        response = turn_on_auto_recharge(base_url, access_token, carriers[0], bank_cards[0])
+        response = turn_on_auto_recharge(base_url, access_token, u.carriers[0], u.bank_cards[0])
         if response['success']:
             print("PASS: Enable autorecharge")
 
-        response = turn_off_auto_recharge(base_url, access_token, carriers[0], bank_cards[0])
+        response = turn_off_auto_recharge(base_url, access_token, u.carriers[0], u.bank_cards[0])
         if response['success']:
             print("PASS: Disable autorecharge")
 
-        response = delete_auto_recharge(base_url, access_token, carriers[0])
+        response = delete_auto_recharge(base_url, access_token, u.carriers[0])
         if response['success']:
             print("PASS: Delete autorecharge")
 
@@ -163,18 +199,18 @@ def change_password_cycle(base_url, access_token, password, new_password):
 
 
 def live_feed_cycle(base_url, access_token):
-    if offers:
-        response = get_offers(base_url, access_token, offers)
+    if u.offers:
+        response = get_offers(base_url, access_token, u.offers)
         for r in response:
             if r['success']:
                 print(f"PASS: Offer {r['data']['id']} | {r['data']['title']}")
-    if votes:
-        response = get_votes(base_url, access_token, votes)
+    if u.votes:
+        response = get_votes(base_url, access_token, u.votes)
         for r in response:
             if r['success']:
                 print(f"PASS: Vote questions {len(r['data'])}")
-    if notifications:
-        response = get_notifications(base_url, access_token, notifications)
+    if u.notifications:
+        response = get_notifications(base_url, access_token, u.notifications)
         for r in response:
             if r['success']:
                 print(f"PASS: Notification {r['data']['id']} | {r['data']['title']}")
