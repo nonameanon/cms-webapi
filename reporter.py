@@ -8,7 +8,12 @@ class Reporter:
         self.blocked = 0
 
     def start(self):
-        self.file.write(f'<center>{self.title}</center>')
+        self.file.write(f'<html><head><title>{self.title}</title>')
+        self.file.write('<style>.PASS {color: green;} '
+                        '.FAILED {color: red;} '
+                        '.BLOCKED {color: blue;}</style>')
+        self.file.write('</head><body>')
+        self.file.write(f'<center><h2>{self.title}<h2></center>')
         self.file.write('<hr>')
         self.file.write('')
 
@@ -23,7 +28,7 @@ class Reporter:
         elif result == 'B':
             result = 'BLOCKED'
             self.blocked += 1
-        self.file.write(f'<p><h3>{self.test_number} : {result}</h3><h4>{title}</h4></p>')
+        self.file.write(f'<p><h3 class="{result}">{self.test_number} : {result} |\t\t\t {title}</h3></p>')
         self.file.write(f'<p>{description}</p>\n<hr>')
 
     def end(self):
@@ -32,8 +37,13 @@ class Reporter:
                         f'Passed: {self.passed} | '
                         f'Failed: {self.failed} | '
                         f'Blocked: {self.blocked}<p>')
+        self.file.write('</body></html>')
 
 
-r = Reporter()
+r = Reporter(name='Test')
+r.title = 'Test'
 r.start()
-r.add_test('PASS', title='Test', description='Some test')
+r.add_test(True, title='Test', description='Some test')
+r.add_test(False, title='Another test')
+r.add_test('B', title='Blocked test', description='Must be blue')
+r.end()
