@@ -2,7 +2,12 @@ import requests
 import json
 from string import ascii_letters
 from random import choice, randint
-from requests_toolbelt.multipart.encoder import MultipartEncoder
+
+
+def get_random_string(length):
+    letters = ascii_letters
+    result_str = ''.join(choice(letters) for i in range(length))
+    return result_str
 
 
 def request_access_token(payload):
@@ -98,7 +103,7 @@ def get_bank_cards_list(base_url, access_token):
     return response.json()
 
 
-def get_feeds_list(base_url, access_token, page=0, size=20, qfilter=None, retrieveBody=False,
+def get_feeds_list(base_url, access_token, page=0, size=20, q_filter=None, retrieveBody=False,
                    retrieveOfferBody=False):
 
     """
@@ -106,8 +111,8 @@ def get_feeds_list(base_url, access_token, page=0, size=20, qfilter=None, retrie
     """
 
     url = f"{base_url}/feeds/v1.0?page={page}&size={size}&retrieveBody={retrieveBody}&retrieveOfferBody={retrieveOfferBody}"
-    if qfilter:
-        url += f"&filter={qfilter}"
+    if q_filter:
+        url += f"&filter={q_filter}"
 
     payload = {}
     headers = {
@@ -238,14 +243,10 @@ def upload_profile_image(base_url, access_token, file=None):
     if file is None:
         file = open('test.png', 'rb')
 
-    mp_e = MultipartEncoder(fields={
-        'file': ('test.png', file, 'image/png'),
-    })
-
     payload = {'file': file}
 
     headers = {
-        'Content-Type': mp_e.content_type,
+        'Content-Type': 'multipart/form-data',
         'Authorization': f'Bearer {access_token}'
     }
 
@@ -272,8 +273,8 @@ def delete_profile_image(base_url, access_token, image_field_id=None):
     return response.json()
 
 
-def update_user_info(base_url, access_token, firstName='Test', middleName='Test', lastName='Test',
-                     birthDate='01.09.1939', gender='male', homeStationId="812", preferredLanguageCode='ru'):
+def update_user_info(base_url, access_token, firstName=None, middleName=None, lastName=None,
+                     birthDate=None, gender=None, homeStationId="812", preferredLanguageCode='ru'):
 
     """
     Обновляет данные профиля:
@@ -288,6 +289,17 @@ def update_user_info(base_url, access_token, firstName='Test', middleName='Test'
     :param preferredLanguageCode:
     :return response.json:
     """
+
+    if firstName is None:
+        firstName = get_random_string(randint(1, 25))
+    if middleName is None:
+        middleName = get_random_string(randint(1, 25))
+    if lastName is None:
+        lastName = get_random_string(randint(1, 25))
+    if birthDate is None:
+        birthDate = "%02d.%02d.%d" % (randint(1, 30), randint(1, 12), randint(1900, 2021))
+    if gender is None:
+        gender = choice(['male', 'female'])
 
     url = f"{base_url}/accounts/v1.0/user"
 
@@ -418,11 +430,6 @@ def change_carriers_names(base_url, access_token, carrier_ids=None, name=None):
     Изменяет имена носителей
     Возвращает список ответов
     """
-
-    def get_random_string(length):
-        letters = ascii_letters
-        result_str = ''.join(choice(letters) for i in range(length))
-        return result_str
 
     responses = []
     for c in carrier_ids:
@@ -702,15 +709,15 @@ def get_notifications(base_url, access_token, notifications=()):
 # Карты и терминалы
 
 def get_places_on_map(base_url, access_token, lat=55.75830929718952, lon=37.61971450262452,
-                      rad=0.6210346151841654, qfilter=("BUY_TICKET", "DOWN_LOYALTY")):
+                      rad=0.6210346151841654, q_filter=("BUY_TICKET", "DOWN_LOYALTY")):
 
     """
     Находит места на карте и возвращает информацию о них
     """
 
     url = f"{base_url}/places/v1.0/search?lat={lat}&lon={lon}&rad={rad}"
-    if qfilter:
-        for f in qfilter:
+    if q_filter:
+        for f in q_filter:
             url += f"&filter={f}"
 
     payload = {}

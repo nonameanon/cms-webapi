@@ -1,11 +1,9 @@
 from req import *
 from user import User
 from reporter import Reporter
-import pytest
+
 
 u = User()
-rep = Reporter()
-rep.title = 'MM LKP CYCLES'
 
 
 def main_cycle(base_url, access_token):
@@ -99,28 +97,37 @@ def main_cycle(base_url, access_token):
     print("-"*50)
 
 
-main_cycle(u.base_url, u.access_token)
-rep.end()
-
-
 def change_data_cycle(base_url, access_token):
     if u.image_id:
         response = delete_profile_image(base_url, access_token, u.image_id)
         if response['success']:
+            rep.add_test(True, 'Delete Image', u.image_id)
             print(f"PASS: Delete image\n\tID: {u.image_id}")
+        else:
+            rep.add_test(False, 'Delete Image', response)
+    else:
+        rep.add_test(False, 'Delete Image', 'Image is not set')
 
-    response = update_user_info(base_url, access_token, firstName="AAAAA", middleName="BBBBBBB",
-                                lastName="CCCCCCCC", gender="female")
+    response = update_user_info(base_url, access_token)
     if response['success']:
+        rep.add_test(True, 'Update User Info')
         print("PASS: Update user info")
+    else:
+        rep.add_test(False, 'Update User Info', response)
 
-    response = turn_off_u.notifications(base_url, access_token)
+    response = turn_off_notifications(base_url, access_token)
     if response['success']:
-        print("PASS: Turn off u.notifications")
+        rep.add_test(True, 'Turn Off Notifications')
+        print("PASS: Turn off notifications")
+    else:
+        rep.add_test(False, 'Turn Off Notifications', response)
 
-    response = turn_on_u.notifications(base_url, access_token)
+    response = turn_on_notifications(base_url, access_token)
     if response['success']:
-        print("PASS: Turn on u.notifications")
+        rep.add_test(True, 'Turn On Notifications')
+        print("PASS: Turn on notifications")
+    else:
+        rep.add_test(False, 'Turn On Notifications', response)
 
     print("PASS: CHANGE PERSONAL DATA")
     print('-'*50)
@@ -128,7 +135,7 @@ def change_data_cycle(base_url, access_token):
 
 def change_carriers_cycle(base_url, access_token):
     if u.carriers:
-        response = change_u.carriers_names(base_url, access_token, u.carriers)
+        response = change_carriers_names(base_url, access_token, u.carriers)
         if response[0]['success']:
             print("PASS: Changed names")
 
@@ -161,21 +168,21 @@ def change_carriers_cycle(base_url, access_token):
         if response['success']:
             print(f"PASS: Carrier unbind\n\tID: {card_id}")
 
-        response = turn_on_balance_u.notifications(base_url, access_token, u.carriers[0])
+        response = turn_on_balance_notifications(base_url, access_token, u.carriers[0])
         if response['success']:
             print("PASS: Enable balance u.notifications")
 
         response = turn_on_auto_recharge(base_url, access_token, u.carriers[0], u.bank_cards[0])
         if response['success']:
-            print("PASS: Enable autorecharge")
+            print("PASS: Enable auto recharge")
 
         response = turn_off_auto_recharge(base_url, access_token, u.carriers[0], u.bank_cards[0])
         if response['success']:
-            print("PASS: Disable autorecharge")
+            print("PASS: Disable auto recharge")
 
         response = delete_auto_recharge(base_url, access_token, u.carriers[0])
         if response['success']:
-            print("PASS: Delete autorecharge")
+            print("PASS: Delete auto recharge")
 
         print("PASS: CARRIER ACTIONS")
         print("-"*50)
@@ -226,3 +233,10 @@ def maps_cycle(base_url, access_token):
             print(f"\t{p['id']} | {p['address']}")
     print("PASS: PLACES ON MAP")
     print("-"*50)
+
+
+rep = Reporter(name='Change Data Cycle')
+rep.title = 'MM LKP CYCLES'
+rep.start()
+change_data_cycle(u.base_url, u.access_token)
+rep.end()
