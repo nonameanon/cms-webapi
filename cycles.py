@@ -138,17 +138,15 @@ def change_carriers_cycle(u, rep):
             rep.add_test(False, "Changed Names", response)
 
         response = get_carriers_info(u.base_url, u.access_token, u.carriers)
-        if response[0]['success']:
-            desc = None
-            for r in response:
-                desc = r['data']['card']['card']['cardNumber']+' '
-                desc += r['data']['card']['card']['displayName']+' '
-                desc += r['data']['card']['status']+' '
-                desc += str(r['data']['card']['balance']['balance'])+'\n'
-            rep.add_test(True, "Carriers Info", desc)
-            print("PASS: Carriers info")
-        else:
-            rep.add_test(False, 'Carriers Info', response[0])
+        for r in response:
+            if r['success']:
+                desc = r['data']['card']['card']['displayName']+' | '
+                desc += r['data']['card']['status']+' | '
+                desc += str(r['data']['card']['balance']['balance'])
+                rep.add_test(True, f"Carrier Info {r['data']['card']['card']['cardNumber']}", desc)
+                print("PASS: Carriers info")
+            else:
+                rep.add_test(False, 'Carriers Info', r)
 
         response = validate_carrier_payment(u.base_url, u.access_token, u.carriers)
         for r in response:
@@ -225,20 +223,25 @@ def change_carriers_cycle(u, rep):
 
 
 def change_password_cycle(u, rep):
-    response = create_security_token(u.base_url, u.access_token, u.password)
+    response = create_security_token(u.base_url, u.access_token, u.get_pass())
     if response['success']:
         security_token = response['data']['securityToken']
-        print("PASS: Security token generated\n\t"
-              f"{'*'*len(security_token[:-6])}{security_token[-6:]}")
+        rep.add_test(True, "Security Token Generated", f"{'*'*len(security_token[:-7])}{security_token[-7:]}")
+        print("PASS: Security token generated")
     else:
         security_token = None
+        rep.add_test(False, "Security Token is None", response)
         print("FAIL: Security token is None")
 
-    response = change_password(u.base_url, u.access_token, security_token, u.new_password)
+    response = change_password(u.base_url, u.access_token, security_token, u.get_new_pass())
     if response['success']:
+        rep.add_test(True, "Password Changed")
         print("PASS: PASSWORD CHANGED")
         print("-" * 50)
         return True
+    else:
+        rep.add_test(False, "Password is not Changed")
+        return False
 
 
 def live_feed_cycle(u, rep):
@@ -246,17 +249,35 @@ def live_feed_cycle(u, rep):
         response = get_offers(u.base_url, u.access_token, u.offers)
         for r in response:
             if r['success']:
+                rep.add_test(True, f"Offer {r['data']['id']}", r['data']['title'])
                 print(f"PASS: Offer {r['data']['id']} | {r['data']['title']}")
+            else:
+                rep.add_test(False, "Offer", r)
+    else:
+        rep.add_test('B', "No Available Offers")
+
     if u.votes:
         response = get_votes(u.base_url, u.access_token, u.votes)
         for r in response:
             if r['success']:
+                rep.add_test(True, "Vote", [v['title'] for v in r['data']])
                 print(f"PASS: Vote questions {len(r['data'])}")
+            else:
+                rep.add_test(False, "Vote", r)
+    else:
+        rep.add_test('B', "No Available Votes")
+
     if u.notifications:
         response = get_notifications(u.base_url, u.access_token, u.notifications)
         for r in response:
             if r['success']:
+                rep.add_test(True, f"Notification {r['data']['id']}", r['data']['title'])
                 print(f"PASS: Notification {r['data']['id']} | {r['data']['title']}")
+            else:
+                rep.add_test(False, "Notification", r)
+    else:
+        rep.add_test(False, "No Available Notifications")
+
     print("PASS: LIVE FEED ITEMS")
     print("-"*50)
 
@@ -266,7 +287,11 @@ def maps_cycle(u, rep):
     if response['success']:
         print("PASS: Places on maps")
         for p in response['data']:
+            rep.add_test(True, f"Place On Map {p['id']}", f"{p['address']}")
             print(f"\t{p['id']} | {p['address']}")
+    else:
+        rep.add_test(False, "Places On Map", response)
+
     print("PASS: PLACES ON MAP")
     print("-"*50)
 
