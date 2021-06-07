@@ -1,4 +1,4 @@
-from req import request_access_token
+from req import request_access_token, get_carriers_info
 from dotenv import load_dotenv
 from os import getenv
 
@@ -17,6 +17,8 @@ class User:
         self.notifications = ()
         self.offers = ()
         self.votes = ()
+        self.blocked_card = None
+        self.unblocked_card = None
 
         self.access_payload = f"grant_type=password&username={self.username}&password={self.__password}"
 
@@ -42,6 +44,15 @@ class User:
 
     def get_new_pass(self):
         return self.__new_password
+
+    def check_blocked_carriers(self):
+        r = get_carriers_info(self.base_url, self.access_token, ['860', '859'])
+        for c in r:
+            if c['success']:
+                if c['data']['card']['status'] == 'action':
+                    self.unblocked_card = c['data']['card']['card']['linkedCardId']
+                else:
+                    self.blocked_card = c['data']['card']['card']['linkedCardId']
 
     def change_password(self, changed):
         if changed:

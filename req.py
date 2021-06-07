@@ -297,7 +297,7 @@ def update_user_info(base_url, access_token, firstName=None, middleName=None, la
     if lastName is None:
         lastName = get_random_string(randint(1, 25))
     if birthDate is None:
-        birthDate = "%02d.%02d.%d" % (randint(1, 30), randint(1, 12), randint(1900, 2021))
+        birthDate = "%02d.%02d.%d" % (randint(1, 12), randint(1, 30), randint(1900, 2021))
     if gender is None:
         gender = choice(['male', 'female'])
 
@@ -600,6 +600,50 @@ def delete_auto_recharge(base_url, access_token, card_id=None):
     response = requests.request("DELETE", url, headers=headers, data=payload)
 
     return response.json()
+
+
+def block_carrier(base_url, access_token, card_id=None):
+
+    """
+    Блокирует носитель
+    """
+
+    if card_id is None:
+        card_id = "860"
+
+    url = f"{base_url}/carriers/v1.0/{card_id}/block?block=true"
+
+    payload = {}
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    response = requests.request("PUT", url, headers=headers, data=payload)
+
+    return response.json()
+
+
+def unblock_carrier(base_url, access_token, card_id=None):
+
+    """
+    Разблокирует носитель
+    """
+
+    if card_id is None:
+        card_id = "859"
+
+    url = f"{base_url}/carriers/v1.0/{card_id}/unblock"
+
+    payload = {}
+    headers = {
+        'Authorization': f'Bearer {access_token}'
+    }
+
+    response = requests.request("PUT", url, headers=headers, data=payload)
+
+    return response.json()
+
+
 
 
 # Смена пароля
