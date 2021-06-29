@@ -243,14 +243,17 @@ def upload_profile_image(base_url, access_token, file=None):
     if file is None:
         file = open('test.png', 'rb')
 
-    payload = {'file': file}
+    payload = {}
+    files = [
+        ('file', file, 'image/png')
+    ]
 
     headers = {
         'Content-Type': 'multipart/form-data',
         'Authorization': f'Bearer {access_token}'
     }
 
-    response = requests.request("POST", url, headers=headers, data=payload, files=file)
+    response = requests.request("POST", url, headers=headers, data=payload, files=files)
 
     return response.json()
 

@@ -26,13 +26,14 @@ rep.start()
 '''
     Тут можно добавить все необходимые циклы
 '''
-main_cycle(u, rep)
-change_data_cycle(u, rep)
-change_carriers_cycle(u, rep)
-changed_password = change_password_cycle(u, rep)
-u.change_password(changed_password)
-live_feed_cycle(u, rep)
-maps_cycle(u, rep)
+
+# main_cycle(u, rep)
+# change_data_cycle(u, rep)
+# change_carriers_cycle(u, rep)
+# changed_password = change_password_cycle(u, rep)
+# u.change_password(changed_password)
+# live_feed_cycle(u, rep)
+# maps_cycle(u, rep)
 
 '''
     Reporter заканчивает запись, подводит итог тестовых циклов и сохраняет файл

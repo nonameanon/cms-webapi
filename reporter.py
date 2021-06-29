@@ -3,6 +3,7 @@ import os
 
 class Reporter:
     def __init__(self, name='report'):
+        self.cycle_results = {}
         if not os.path.exists('reports'):
             os.mkdir('reports', 0o666)
         self.file = open(f'reports/{name}.html', 'w')
@@ -36,6 +37,14 @@ class Reporter:
         self.file.write(f'<p><h3 class="{result}">{self.test_number} : {result} |\t\t\t {title}</h3></p>')
         self.file.write(f'<p>{description}</p>\n<hr>')
 
+    def cycle_start(self, title=None):
+        self.file.write('<hr>')
+        self.file.write(f'<p><h4>Cycle: {title}</h4></p>')
+        self.file.write('<hr>')
+
+    def cycle_end(self):
+        self.file.write('<hr>')
+
     def end(self):
         self.file.write('<hr>')
         self.file.write(f'<p>Total tests: {self.test_number} | '
@@ -43,3 +52,4 @@ class Reporter:
                         f'Failed: {self.failed} | '
                         f'Blocked: {self.blocked}<p>')
         self.file.write('</body></html>')
+        self.file.close()

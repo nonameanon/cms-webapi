@@ -11,6 +11,7 @@ class User:
         self.__password = getenv('PASSWORD')
         self.__new_password = getenv('NEW_PASSWORD')
         self.base_url = "https://uat-mm.srvdev.ru/passenger/api"
+        self.access_token = None
         self.image_id = None
         self.carriers = ()
         self.bank_cards = ()
@@ -22,10 +23,16 @@ class User:
 
         self.access_payload = f"grant_type=password&username={self.username}&password={self.__password}"
 
-        self.access_token = request_access_token(self.access_payload).json()["access_token"]
-        self.refresh_token = request_access_token(self.access_payload).json()["refresh_token"]
+        self.get_access_token()
 
         self.test_json = {}
+
+    def get_access_token(self):
+        r = request_access_token(self.access_payload)
+        if r.status_code == 200:
+            self.access_token = r.json()["access_token"]
+        else:
+            print('ERROR:', r.json())
 
     def select_uat(self):
         self.base_url = "https://uat-mm.srvdev.ru/passenger/api"
